@@ -2,15 +2,14 @@
 <!--
 =====================================================================
   PROJECTE      : Amic Invisible
-  FITXER        : consulta.html  (pàgina per al mòbil)
-  CREAT PER     : amic_invisible_v0.11.py
-  VERSIÓ        : 0.11
-  SORTEIG       : 14/11/2026 19:44
-  PARTICIPANTS  : 3
+  FITXER        : consulta.html  (pàgina FIXA per al mòbil)
+  CREAT PER     : amic_invisible_v0.12.py
+  VERSIÓ        : 0.12
   ADREÇA        : https://albert-mf.github.io/amic-invisible/consulta.html
 ---------------------------------------------------------------------
-  Aquest fitxer el crea el programa a cada sorteig. NO s'edita a mà.
-  Després de cada sorteig nou s'ha de tornar a pujar a GitHub.
+  Aquesta pàgina NO porta cap sorteig. Les dades van xifrades dins
+  de l'enllaç que rep cada amic. Es puja a GitHub UNA sola vegada.
+  Només s'ha de tornar a pujar si canvia la versió de la pàgina.
 =====================================================================
 -->
 <html lang="ca"><head><meta charset="utf-8">
@@ -24,23 +23,21 @@
           width:88%; max-width:380px; text-align:center; box-shadow:0 6px 20px rgba(0,0,0,.3); }
  h1 { margin:0 0 6px; font-size:1.6em; }
  p { margin:8px 0; }
- input { width:70%; font-size:1.8em; text-align:center; letter-spacing:6px; text-transform:uppercase;
-         padding:10px; border-radius:10px; border:none; margin:12px 0; }
- button { font-size:1.2em; padding:12px 26px; border:none; border-radius:10px; background:#25d366;
-          color:#fff; font-weight:bold; }
  #resultat { margin-top:20px; font-size:1.2em; min-height:2em; }
  .nom { display:block; font-size:2em; font-weight:bold; margin-top:8px; color:#ffe680; }
  .error { color:#ffd2d2; }
  .petit { font-size:.85em; opacity:.8; }
+ .boto { display:none; margin:18px auto 6px; background:#25d366; color:#fff; text-decoration:none;
+         padding:12px 18px; border-radius:10px; font-weight:bold; font-size:1em; }
 </style></head><body>
 <div class="caixa">
  <h1>🎄🎁 Amic Invisible 2026</h1>
  <div id="resultat"></div>
+ <a id="acceptar" class="boto" href="#">✅ Avisa que ja ho he vist</a>
  <p class="petit">📅 Entrega: 26/12 · 🤫 No ho diguis a ningú!</p>
- <p class="petit">Sorteig 14/11/2026 19:44 · v0.11</p>
+ <p class="petit" id="marca"></p>
 </div>
 <script>
-const DADES = {"jugadors": ["Albert", "Lluïsa", "David"], "secrets": {"fe6a36d99e6668e0": 4105469011, "758f6a4cf264ab9a": 423007426, "3189b4a51029b4fd": 3740323579}};
 function sha256(ascii){function r(v,a){return(v>>>a)|(v<<(32-a))}var p=Math.pow,m=p(2,32),i,j,res='',w=[],L=ascii.length*8,
 h=sha256.h=sha256.h||[],k=sha256.k=sha256.k||[],pl=k.length,ic={};for(var c=2;pl<64;c++){if(!ic[c]){for(i=0;i<313;i+=c)ic[i]=c;
 h[pl]=(p(c,.5)*m)|0;k[pl++]=(p(c,1/3)*m)|0}}ascii+='\x80';while(ascii.length%64-56)ascii+='\x00';for(i=0;i<ascii.length;i++){
@@ -49,17 +46,40 @@ for(j=0;j<w.length;){var W=w.slice(j,j+=16),o=h;h=h.slice(0,8);for(i=0;i<64;i++)
 t1=h[7]+(r(e,6)^r(e,11)^r(e,25))+((e&h[5])^((~e)&h[6]))+k[i]+(W[i]=(i<16)?W[i]:(W[i-16]+(r(w15,7)^r(w15,18)^(w15>>>3))+W[i-7]+
 (r(w2,17)^r(w2,19)^(w2>>>10)))|0),t2=(r(a,2)^r(a,13)^r(a,22))+((a&h[1])^(a&h[2])^(h[1]&h[2]));h=[(t1+t2)|0].concat(h);h[4]=(h[4]+t1)|0}
 for(i=0;i<8;i++)h[i]=(h[i]+o[i])|0}for(i=0;i<8;i++)for(j=3;j+1;j--){var b=(h[i]>>(j*8))&255;res+=((b<16)?0:'')+b.toString(16)}return res}
+function desxifrar(token){
+  const sal = token.slice(0, 8);
+  let b64 = token.slice(8).replace(/-/g, '+').replace(/_/g, '/');
+  while (b64.length % 4) b64 += '=';
+  const bin = atob(b64);
+  let flux = '';
+  for (let i = 0; flux.length < bin.length * 2; i++) flux += sha256('amic-' + sal + '-' + i);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i) ^ parseInt(flux.substr(i * 2, 2), 16);
+  return new TextDecoder('utf-8', {fatal: true}).decode(bytes).split('\n');
+}
 function mostrar(){
   const out = document.getElementById('resultat');
-  const codi = location.hash.replace('#', '').trim().toUpperCase();
-  const valor = DADES.secrets[sha256('amic-' + codi).slice(0,16)];
-  if (!/^[A-Z0-9]{4}$/.test(codi) || valor === undefined) {
+  const boto = document.getElementById('acceptar');
+  boto.style.display = 'none';
+  document.getElementById('marca').textContent = '';
+  let parts = null;
+  try {
+    const token = location.hash.slice(1);
+    if (/^[0-9a-f]{8}[A-Za-z0-9_-]+$/.test(token)) parts = desxifrar(token);
+  } catch (e) { parts = null; }
+  if (!parts || parts.length !== 4 || !parts[0] || !parts[1]) {
     out.innerHTML = '<span class="error">Toca l\'enllaç que has rebut pel WhatsApp.</span>'; return;
   }
-  const clau = parseInt(sha256('clau-' + codi).slice(0,8), 16);
-  const nom = DADES.jugadors[(valor ^ clau) >>> 0];
-  out.innerHTML = 'Et toca fer el regal a:<span class="nom">' + nom + '</span>';
+  const [qui, aQui, marca, telOrg] = parts;
+  out.innerHTML = 'Hola ' + esc(qui) + '! Et toca fer el regal a:<span class="nom">' + esc(aQui) + '</span>';
+  document.getElementById('marca').textContent = 'Sorteig ' + marca;
+  if (telOrg) {
+    const text = '🎁 Ja he vist el meu Amic Invisible! (' + qui + ')';
+    boto.href = 'https://wa.me/' + telOrg + '?text=' + encodeURIComponent(text);
+    boto.style.display = 'block';
+  }
 }
+function esc(t){ return t.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 window.addEventListener('hashchange', mostrar);
 mostrar();
 </script>
