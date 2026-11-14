@@ -21,14 +21,11 @@
 </style></head><body>
 <div class="caixa">
  <h1>🎄🎁 Amic Invisible 2026</h1>
- <p>Escriu el teu codi secret:</p>
- <input id="codi" maxlength="4" autocomplete="off" autocapitalize="characters">
- <br><button onclick="consultar()">Descobrir 🎁</button>
  <div id="resultat"></div>
  <p class="petit">📅 Entrega: 26/12 · 🤫 No ho diguis a ningú!</p>
 </div>
 <script>
-const DADES = {"jugadors": ["Albert", "Lluïsa", "David"], "secrets": {"887ede458a7b6fd2": 900529169, "6e87e8dc1813a3af": 3609888089, "fecce220cdcc91d6": 723961817}};
+const DADES = {"jugadors": ["Albert", "Lluïsa", "David"], "secrets": {"4701fc5b36220e05": 3625508679, "cdde9c2268dbbdde": 2020836893, "57d43b30bb7f7990": 2307281693}};
 function sha256(ascii){function r(v,a){return(v>>>a)|(v<<(32-a))}var p=Math.pow,m=p(2,32),i,j,res='',w=[],L=ascii.length*8,
 h=sha256.h=sha256.h||[],k=sha256.k=sha256.k||[],pl=k.length,ic={};for(var c=2;pl<64;c++){if(!ic[c]){for(i=0;i<313;i+=c)ic[i]=c;
 h[pl]=(p(c,.5)*m)|0;k[pl++]=(p(c,1/3)*m)|0}}ascii+='\x80';while(ascii.length%64-56)ascii+='\x00';for(i=0;i<ascii.length;i++){
@@ -37,23 +34,18 @@ for(j=0;j<w.length;){var W=w.slice(j,j+=16),o=h;h=h.slice(0,8);for(i=0;i<64;i++)
 t1=h[7]+(r(e,6)^r(e,11)^r(e,25))+((e&h[5])^((~e)&h[6]))+k[i]+(W[i]=(i<16)?W[i]:(W[i-16]+(r(w15,7)^r(w15,18)^(w15>>>3))+W[i-7]+
 (r(w2,17)^r(w2,19)^(w2>>>10)))|0),t2=(r(a,2)^r(a,13)^r(a,22))+((a&h[1])^(a&h[2])^(h[1]&h[2]));h=[(t1+t2)|0].concat(h);h[4]=(h[4]+t1)|0}
 for(i=0;i<8;i++)h[i]=(h[i]+o[i])|0}for(i=0;i<8;i++)for(j=3;j+1;j--){var b=(h[i]>>(j*8))&255;res+=((b<16)?0:'')+b.toString(16)}return res}
-function consultar(){
-  const codi = document.getElementById('codi').value.trim().toUpperCase();
+function mostrar(){
   const out = document.getElementById('resultat');
+  const codi = location.hash.replace('#', '').trim().toUpperCase();
   const valor = DADES.secrets[sha256('amic-' + codi).slice(0,16)];
-  if (codi.length !== 4 || valor === undefined) {
-    out.innerHTML = '<span class="error">Aquest codi no existeix. Revisa\'l bé.</span>'; return;
+  if (!/^[A-Z0-9]{4}$/.test(codi) || valor === undefined) {
+    out.innerHTML = '<span class="error">Toca l\'enllaç que has rebut pel WhatsApp.</span>'; return;
   }
   const clau = parseInt(sha256('clau-' + codi).slice(0,8), 16);
   const nom = DADES.jugadors[(valor ^ clau) >>> 0];
   out.innerHTML = 'Et toca fer el regal a:<span class="nom">' + nom + '</span>';
 }
-document.getElementById('codi').addEventListener('keydown', e => { if (e.key === 'Enter') consultar(); });
-function codiEnllac() {
-  const c = location.hash.replace('#', '').trim().toUpperCase();
-  if (/^[A-Z0-9]{4}$/.test(c)) { document.getElementById('codi').value = c; consultar(); }
-}
-window.addEventListener('hashchange', codiEnllac);
-codiEnllac();
+window.addEventListener('hashchange', mostrar);
+mostrar();
 </script>
 </body></html>
